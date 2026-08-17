@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Estoque.Infrastructure", "E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Estoque.Infrastructure.Tests", "Estoque.Infrastructure.Tests\Estoque.Infrastructure.Tests.csproj", "{9BA7F6AA-0F46-49E5-A834-E664B79AEEBF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Estoque.API", "Estoque.API\Estoque.API.csproj", "{5D967D09-5DA7-4987-849A-42F82EAA32D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Estoque.API.Tests", "Estoque.API.Tests\Estoque.API.Tests.csproj", "{D6904EBB-17CA-4B92-BFA6-70294F0BC596}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +52,13 @@ Global
 		{9BA7F6AA-0F46-49E5-A834-E664B79AEEBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BA7F6AA-0F46-49E5-A834-E664B79AEEBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BA7F6AA-0F46-49E5-A834-E664B79AEEBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D967D09-5DA7-4987-849A-42F82EAA32D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D967D09-5DA7-4987-849A-42F82EAA32D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D967D09-5DA7-4987-849A-42F82EAA32D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D967D09-5DA7-4987-849A-42F82EAA32D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6904EBB-17CA-4B92-BFA6-70294F0BC596}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6904EBB-17CA-4B92-BFA6-70294F0BC596}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6904EBB-17CA-4B92-BFA6-70294F0BC596}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6904EBB-17CA-4B92-BFA6-70294F0BC596}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

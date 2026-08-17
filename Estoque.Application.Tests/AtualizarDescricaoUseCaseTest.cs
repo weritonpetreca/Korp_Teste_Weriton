@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using FluentValidation;
 using Moq;
-using Xunit;
 using Estoque.Application.DTOs;
 using Estoque.Application.UseCases;
 using Estoque.Domain;

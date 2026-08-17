@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using FluentValidation;
 using Estoque.Application.DTOs;
 using Estoque.Domain;
@@ -11,7 +10,7 @@ public class CadastrarProdutoUseCase(
     IProdutoRepository repository,
     IValidator<Produto> validator)
 {
-    public async Task ExecutarAsync(CadastrarProdutoRequest request)
+    public async Task<string> ExecutarAsync(CadastrarProdutoRequest request)
     {
         // 1. Instancia o Domínio com os dados do DTO
         var produto = new Produto(request.Codigo, request.Descricao, request.Saldo);
@@ -21,5 +20,8 @@ public class CadastrarProdutoUseCase(
 
         // 3. Persiste no banco usando a dependência injetada
         await repository.SalvarAsync(produto);
+
+        // Retornamos o código para ser usado como identificador
+        return produto.Codigo;
     }
 }
