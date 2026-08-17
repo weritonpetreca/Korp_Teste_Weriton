@@ -1,10 +1,8 @@
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Estoque.Domain;
 using Estoque.Infrastructure.Repositories;
 using Testcontainers.DynamoDb;
-using Xunit;
 
 namespace Estoque.Infrastructure.Tests;
 

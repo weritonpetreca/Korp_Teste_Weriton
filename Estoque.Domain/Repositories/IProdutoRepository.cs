@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Estoque.Domain.Repositories;
 
 // No C#, por convenção, toda Interface começa com a letra 'I' maiúscula.

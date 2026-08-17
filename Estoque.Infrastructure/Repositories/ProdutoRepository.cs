@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Estoque.Domain;
@@ -8,16 +6,10 @@ using Estoque.Domain.Repositories;
 namespace Estoque.Infrastructure.Repositories;
 
 // A classe assina o contrato : IProdutoRepository
-public class ProdutoRepository : IProdutoRepository
+public class ProdutoRepository(IAmazonDynamoDB dynamoDb) : IProdutoRepository
 {
-    private readonly IAmazonDynamoDB _dynamoDb;
+    private readonly IAmazonDynamoDB _dynamoDb = dynamoDb;
     private const string TableName = "Korp_Estoque_Table";
-
-    // Injeção de dependência do cliente da AWS
-    public ProdutoRepository(IAmazonDynamoDB dynamoDb)
-    {
-        _dynamoDb = dynamoDb;
-    }
 
     public async Task SalvarAsync(Produto produto)
     {

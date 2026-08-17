@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using FluentValidation;
 using Estoque.Application.DTOs;
 using Estoque.Domain.Repositories;
