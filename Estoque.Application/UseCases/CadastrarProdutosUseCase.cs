@@ -5,23 +5,21 @@ using Estoque.Domain.Repositories;
 
 namespace Estoque.Application.UseCases;
 
-// Injetamos o Repositório e o Validador direto na assinatura da classe (Primary Constructor)
 public class CadastrarProdutoUseCase(
     IProdutoRepository repository,
     IValidator<Produto> validator)
 {
     public async Task<string> ExecutarAsync(CadastrarProdutoRequest request)
     {
-        // 1. Instancia o Domínio com os dados do DTO
+        // 1. Instancia a Entidade de Domínio (ela já carimba a DataCriacao e DataAtualizacao via construtor)
         var produto = new Produto(request.Codigo, request.Descricao, request.Saldo);
         
-        // 2. Valida utilizando o validador injetado via DI (Fail-Fast automático)
+        // 2. Valida a entidade utilizando o validador do domínio (Fail-Fast)
         await validator.ValidateAndThrowAsync(produto);
 
-        // 3. Persiste no banco usando a dependência injetada
+        // 3. Persiste no repositório
         await repository.SalvarAsync(produto);
 
-        // Retornamos o código para ser usado como identificador
         return produto.Codigo;
     }
 }

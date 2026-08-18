@@ -24,7 +24,9 @@ public class ObterProdutoPorCodigoUseCase(
             produto.Codigo,
             produto.Descricao,
             produto.Saldo,
-            produto.Version
+            produto.Version,
+            produto.DataCriacao,
+            produto.DataAtualizacao
         );
     }
 }

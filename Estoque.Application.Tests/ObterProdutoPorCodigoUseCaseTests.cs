@@ -27,7 +27,8 @@ public class ObterProdutoPorCodigoUseCaseTests
     {
         // Arrange
         var codigo = "PROD-001";
-        var produtoExistente = new Produto(codigo, "Teclado Mecânico", 15, version: 2);
+        var agora = DateTime.UtcNow.ToString("o");
+        var produtoExistente = new Produto(codigo, "Teclado Mecânico", 15, version: 2, dataCriacao: agora, dataAtualizacao: agora);
 
         _repositoryMock.Setup(r => r.ObterPorCodigoAsync(codigo))
             .ReturnsAsync(produtoExistente);
