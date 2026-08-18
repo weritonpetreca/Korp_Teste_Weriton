@@ -50,7 +50,7 @@ public class CadastrarProdutoUseCaseTests
         // Act & Assert
         // O método deve lançar a ValidationException do FluentValidation. 
         // Note o uso do ThrowsAsync em vez do Throws normal, pois o método é assíncrono.
-        await Assert.ThrowsAsync<ValidationException>(() => _useCase.ExecutarAsync(request));
+        await Assert.ThrowsAsync<ArgumentException>(() => _useCase.ExecutarAsync(request));
 
         // Verificamos que, como deu erro, o repositório NUNCA (Times.Never) foi chamado para salvar nada.
         _produtoRepositoryMock.Verify(repo => repo.SalvarAsync(It.IsAny<Produto>()), Times.Never);

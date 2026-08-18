@@ -1,4 +1,5 @@
 using FluentValidation;
+using Estoque.Domain;
 
 namespace Estoque.Domain.Validators;
 
@@ -15,13 +16,26 @@ public class ProdutoValidator : AbstractValidator<Produto>
         // Regras para a Descrição (Defesa em Profundidade contra XSS)
         RuleFor(p => p.Descricao)
             .NotEmpty().WithMessage("A descrição do produto não pode ser vazia.")
-            .MaximumLength(255).WithMessage("A descrição do produto não pode exceder 255 caracteres.")
-            // Bloqueia as tags < e > que são a base de exploits XSS e Injeção de HTML
+            .MaximumLength(255).WithMessage("O descrição do produto não pode exceder 255 caracteres.")
             .Matches(@"^[^<>]*$").WithMessage("A descrição contém caracteres inválidos de formatação.");
 
         // Regras para o Saldo (Limites Operacionais)
         RuleFor(p => p.Saldo)
             .GreaterThanOrEqualTo(0).WithMessage("O saldo inicial não pode ser negativo.")
             .LessThanOrEqualTo(999999).WithMessage("O saldo inicial não pode exceder 999.999 unidades.");
+
+        // Validação opcional de formato para garantir que a auditoria interna seja sempre uma data ISO 8601 válida
+        RuleFor(p => p.DataCriacao)
+            .NotEmpty().WithMessage("A data de criação é obrigatória.")
+            .Must(BeAValidIso8601Date).WithMessage("A data de criação deve estar no formato ISO 8601 válido.");
+
+        RuleFor(p => p.DataAtualizacao)
+            .NotEmpty().WithMessage("A data de atualização é obrigatória.")
+            .Must(BeAValidIso8601Date).WithMessage("A data de atualização deve estar no formato ISO 8601 válido.");
+    }
+
+    private bool BeAValidIso8601Date(string dateStr)
+    {
+        return DateTime.TryParse(dateStr, out _);
     }
 }

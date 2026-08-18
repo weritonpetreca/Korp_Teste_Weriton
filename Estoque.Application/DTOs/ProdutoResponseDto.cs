@@ -4,5 +4,7 @@ public record ProdutoResponseDto(
     string Codigo,
     string Descricao,
     int Saldo,
-    int Version
+    int Version,
+    string DataCriacao,
+    string DataAtualizacao
 );

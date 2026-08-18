@@ -1,19 +1,37 @@
 namespace Estoque.Domain;
 
-public class Produto(string codigo, string descricao, int saldo)
+public class Produto
 {
-    public string Codigo { get; private set; } = codigo;
-    public string Descricao { get; private set; } = descricao;
-    public int Saldo { get; private set; } = saldo;
+    public string Codigo { get; private set; }
+    public string Descricao { get; private set; }
+    public int Saldo { get; private set; }
     public int Version { get; private set; } = 1;
+    public string DataCriacao { get; private set; }
+    public string DataAtualizacao { get; private set; }
+
+    // ==========================================
+    // CONSTRUTOR PRINCIPAL (Novo Produto) - Com Guard Clauses de Domínio
+    // ==========================================
+    public Produto(string codigo, string descricao, int saldo)
+    {
+        Codigo = !string.IsNullOrWhiteSpace(codigo) ? codigo : throw new ArgumentException("Código inválido.");
+        Descricao = !string.IsNullOrWhiteSpace(descricao) ? descricao : throw new ArgumentException("Descrição inválida.");
+        Saldo = saldo >= 0 ? saldo : throw new ArgumentException("Saldo não pode ser negativo.");
+        
+        var agora = DateTime.UtcNow.ToString("o");
+        DataCriacao = agora;
+        DataAtualizacao = agora;
+    }
 
     // ==========================================
     // CONSTRUTOR DE RECONSTITUIÇÃO (HYDRATION)
     // ==========================================
-    // Usado exclusivamente pelo Repositório para carregar o estado real do banco (incluindo a versão).
-    public Produto(string codigo, string descricao, int saldo, int version) : this(codigo, descricao, saldo)
+    public Produto(string codigo, string descricao, int saldo, int version, string dataCriacao, string dataAtualizacao) 
+        : this(codigo, descricao, saldo)
     {
         Version = version >= 1 ? version : throw new ArgumentException("Versão inválida.");
+        DataCriacao = !string.IsNullOrWhiteSpace(dataCriacao) ? dataCriacao : throw new ArgumentException("Data de criação inválida.");
+        DataAtualizacao = !string.IsNullOrWhiteSpace(dataAtualizacao) ? dataAtualizacao : throw new ArgumentException("Data de atualização inválida.");
     }
 
     public void AtualizarDescricao(string novaDescricao)
@@ -21,7 +39,7 @@ public class Produto(string codigo, string descricao, int saldo)
         if (string.IsNullOrWhiteSpace(novaDescricao)) throw new ArgumentException("Descrição inválida.");
         
         Descricao = novaDescricao;
-        IncrementarVersao();
+        RegistrarModificacao();
     }
 
     public void DebitarEstoque(int quantidade)
@@ -30,7 +48,7 @@ public class Produto(string codigo, string descricao, int saldo)
         if (Saldo < quantidade) throw new InvalidOperationException("Saldo insuficiente.");
 
         Saldo -= quantidade;
-        IncrementarVersao();
+        RegistrarModificacao();
     }
 
     public void CreditarEstoque(int quantidade)
@@ -38,8 +56,12 @@ public class Produto(string codigo, string descricao, int saldo)
         if (quantidade <= 0) throw new ArgumentException("Crédito deve ser > 0.");
         
         Saldo += quantidade;
-        IncrementarVersao();
+        RegistrarModificacao();
     }
 
-    private void IncrementarVersao() => Version++;
+    private void RegistrarModificacao()
+    {
+        Version++;
+        DataAtualizacao = DateTime.UtcNow.ToString("o");
+    }
 }

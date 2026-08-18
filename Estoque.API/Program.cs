@@ -44,6 +44,7 @@ builder.Services.AddSingleton<IAmazonDynamoDB>(sp =>
 
 // A. Registramos o repositório REAL (apenas acessível para injeção)
 builder.Services.AddScoped<ProdutoRepository>();
+builder.Services.AddScoped<IIdempotenciaRepository, IdempotenciaRepository>();
 
 // B. Registramos a INTERFACE entregando o DECORATOR (A Mágica da Resiliência)
 // Quando a aplicação pedir 'IProdutoRepository', entregaremos o 'ResilientProdutoRepository' 
