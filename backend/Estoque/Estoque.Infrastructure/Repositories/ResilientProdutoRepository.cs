@@ -41,4 +41,13 @@ public class ResilientProdutoRepository(
             await innerRepository.AtualizarAsync(produto);
         });
     }
+
+    public async Task<IEnumerable<Produto>> ObterTodosAsync()
+    {
+        // Envolve a chamada de listagem (Scan) na mesma blindagem de resiliência do Polly
+        return await _pipeline.ExecuteAsync(async token => 
+        {
+            return await innerRepository.ObterTodosAsync();
+        });
+    }
 }

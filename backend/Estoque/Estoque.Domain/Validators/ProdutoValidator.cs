@@ -20,7 +20,7 @@ public class ProdutoValidator : AbstractValidator<Produto>
 
         // Regras para o Saldo (Limites Operacionais)
         RuleFor(p => p.Saldo)
-            .GreaterThanOrEqualTo(0).WithMessage("O saldo inicial não pode ser negativo.")
+            .GreaterThanOrEqualTo(1).WithMessage("O saldo inicial deve ser positivo.")
             .LessThanOrEqualTo(999999).WithMessage("O saldo inicial não pode exceder 999.999 unidades.");
 
         // Validação opcional de formato para garantir que a auditoria interna seja sempre uma data ISO 8601 válida

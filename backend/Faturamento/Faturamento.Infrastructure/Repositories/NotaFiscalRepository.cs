@@ -74,4 +74,56 @@ public class NotaFiscalRepository(
 
         return new NotaFiscal(numero, status, itens, dataCriacao);
     }
+
+    public async Task<IEnumerable<NotaFiscal>> ObterTodosAsync()
+    {
+        var request = new ScanRequest
+        {
+            TableName = TableName,
+            FilterExpression = "begins_with(PK, :prefix)",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":prefix", new AttributeValue { S = "NOTA#" } }
+            }
+        };
+
+        var response = await _dynamoDb.ScanAsync(request);
+        var notas = new List<NotaFiscal>();
+
+        if (response.Items == null || response.Items.Count == 0)
+        {
+            return notas;
+        }
+
+        foreach (var item in response.Items)
+        {
+            // Verificação defensiva usando TryGetValue para evitar KeyNotFoundException
+            if (!item.TryGetValue("Numero", out var numVal) ||
+                !item.TryGetValue("Status", out var statusVal) ||
+                !item.TryGetValue("DataCriacao", out var dataCriacaoVal) ||
+                !item.TryGetValue("Itens", out var itensVal))
+            {
+                continue; // Pula registros que não possuem a estrutura completa
+            }
+
+            try
+            {
+                var status = Enum.Parse<StatusNota>(statusVal.S);
+                
+                var itens = itensVal.L.Select(attrMap => new ItemNota(
+                    attrMap.M["CodigoProduto"].S,
+                    int.Parse(attrMap.M["Quantidade"].N)
+                )).ToList();
+
+                notas.Add(new NotaFiscal(numVal.S, status, itens, dataCriacaoVal.S));
+            }
+            catch (Exception ex)
+            {
+                // Protege contra falhas de parsing de enum ou estrutura interna corrompida
+                _logger.LogWarning(ex, "Falha ao processar nota fiscal do banco. Registro ignorado.");
+            }
+        }
+
+        return notas;
+    }
 }

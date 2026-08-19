@@ -1,4 +1,5 @@
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using Faturamento.API.Endpoints;
 using Faturamento.API.Handlers;
 using Faturamento.Application.DTOs;
@@ -11,61 +12,82 @@ using Faturamento.Infrastructure.Repositories;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
 
-// 1. Configuração do AWS DynamoDB (Suporte a Local / Testcontainers ou Nuvem)
+// ==========================================
+// 1. CONFIGURAÇÃO AWS E DYNAMODB (DevSecOps)
+// ==========================================
 builder.Services.AddSingleton<IAmazonDynamoDB>(sp =>
 {
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var serviceUrl = configuration["DynamoDb:ServiceUrl"];
+    var serviceUrl = builder.Configuration["DynamoDb:ServiceUrl"];
     
     if (!string.IsNullOrEmpty(serviceUrl))
     {
-        return new AmazonDynamoDBClient(new AmazonDynamoDBConfig { ServiceURL = serviceUrl });
+        var localConfig = new AmazonDynamoDBConfig { ServiceURL = serviceUrl };
+        return new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", localConfig);
     }
-    return new AmazonDynamoDBClient();
+
+    var cloudConfig = new AmazonDynamoDBConfig { RegionEndpoint = Amazon.RegionEndpoint.USEast1 };
+    return new AmazonDynamoDBClient(cloudConfig);
 });
 
-// 2. Registro de Repositórios e Casos de Uso na Injeção de Dependências
+// ==========================================
+// 2. INJEÇÃO DE DEPENDÊNCIA
+// ==========================================
 builder.Services.AddScoped<INotaFiscalRepository, NotaFiscalRepository>();
 builder.Services.AddScoped<IIdempotenciaRepository, IdempotenciaRepository>();
 builder.Services.AddScoped<CriarNotaFiscalUseCase>();
 builder.Services.AddScoped<ImprimirNotaFiscalUseCase>();
 
-// 3. Registro do FluentValidation
+// FluentValidation
 builder.Services.AddScoped<IValidator<CriarNotaFiscalRequest>, CriarNotaFiscalRequestValidator>();
 
-// 4. Configuração do Cliente HTTP Resiliente (Polly v8) para o Microsserviço de Estoque
-var estoqueBaseUrl = builder.Configuration["EstoqueService:BaseUrl"] ?? "http://localhost:5000";
-
+// Polly & HTTP Client
+var estoqueBaseUrl = builder.Configuration["EstoqueService:BaseUrl"] ?? "http://localhost:5245";
 builder.Services.AddHttpClient<IEstoqueClient, EstoqueClient>(client =>
 {
     client.BaseAddress = new Uri(estoqueBaseUrl);
 })
 .AddStandardResilienceHandler(options =>
 {
-    // Configurações avançadas de Retry, Circuit Breaker e Timeout padrão da indústria
     options.Retry.MaxRetryAttempts = 3;
     options.Retry.Delay = TimeSpan.FromSeconds(1);
     options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(3);
-    options.CircuitBreaker.FailureRatio = 0.5; // Abre se 50% das chamadas falharem
+    options.CircuitBreaker.FailureRatio = 0.5;
     options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
-    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5); // Tempo de Fail-Fast
+    options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5);
 });
 
-// 5. Tratamento Global de Erros (RFC 7807)
+// Tratamento de Erros e ProblemDetails
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// 6. Swagger / OpenAPI para documentação da API
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// ==========================================
+// 3. BUILD E CONFIGURAÇÃO HTTP
+// ==========================================
 var app = builder.Build();
 
-// Inicialização automática da tabela no DynamoDB para ambiente de desenvolvimento/testes
-await EnsureTableCreatedAsync(app.Services);
-
 app.UseExceptionHandler();
+app.UseHttpsRedirection();
+app.UseCors("AllowAngular");
 
 if (app.Environment.IsDevelopment())
 {
@@ -73,47 +95,47 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-// Mapeamento dos Endpoints
 app.MapNotaFiscalEndpoints();
 
-app.Run();
-
-// Método auxiliar para provisionar a tabela de Faturamento no DynamoDB local automaticamente
-static async Task EnsureTableCreatedAsync(IServiceProvider services)
+// ==========================================
+// 4. PROVISIONAMENTO AUTOMÁTICO (DEV)
+// ==========================================
+if (app.Environment.IsDevelopment())
 {
-    using var scope = services.CreateScope();
+    using var scope = app.Services.CreateScope();
     var dynamoDb = scope.ServiceProvider.GetRequiredService<IAmazonDynamoDB>();
     const string tableName = "Korp_Faturamento_Table";
 
     try
     {
-        var tables = await dynamoDb.ListTablesAsync();
-        if (!tables.TableNames.Contains(tableName))
+        app.Logger.LogInformation("Verificando tabela {TableName}...", tableName);
+        
+        try {
+            await dynamoDb.DeleteTableAsync(tableName);
+            // Loop de espera ativa
+            bool deleted = false;
+            while (!deleted) {
+                try { await dynamoDb.DescribeTableAsync(tableName); await Task.Delay(500); }
+                catch (ResourceNotFoundException) { deleted = true; }
+            }
+            app.Logger.LogInformation("Tabela antiga removida.");
+        } catch (ResourceNotFoundException) { /* Ok */ }
+
+        await dynamoDb.CreateTableAsync(new CreateTableRequest
         {
-            await dynamoDb.CreateTableAsync(new Amazon.DynamoDBv2.Model.CreateTableRequest
-            {
-                TableName = tableName,
-                BillingMode = BillingMode.PAY_PER_REQUEST,
-                AttributeDefinitions = [
-                    new Amazon.DynamoDBv2.Model.AttributeDefinition("PK", Amazon.DynamoDBv2.ScalarAttributeType.S)
-                ],
-                KeySchema = [
-                    new Amazon.DynamoDBv2.Model.KeySchemaElement("PK", Amazon.DynamoDBv2.KeyType.HASH)
-                ]
-            });
-        }
+            TableName = tableName,
+            BillingMode = BillingMode.PAY_PER_REQUEST,
+            AttributeDefinitions = [ new AttributeDefinition("PK", ScalarAttributeType.S) ],
+            KeySchema = [ new KeySchemaElement("PK", KeyType.HASH) ]
+        });
+        app.Logger.LogInformation("Tabela {TableName} criada com sucesso!", tableName);
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Aviso ao tentar criar a tabela Korp_Faturamento_Table automaticamente.");
+        app.Logger.LogError(ex, "Erro ao provisionar tabela.");
     }
 }
 
-// Expõe a classe Program para testes de integração com WebApplicationFactory
-namespace Faturamento.API
-{
-    public partial class Program { }
-}
+app.Run();
+
+namespace Faturamento.API { public partial class Program { } }
