@@ -10,6 +10,7 @@ using Estoque.Domain.Repositories;
 using Estoque.Infrastructure.Repositories;
 using FluentValidation;
 using Estoque.API.Endpoints;
+using Estoque.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +87,27 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// G. CORS (Cross-Origin Resource Sharing) para permitir que o Angular acesse a API
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// H. REGISTRO DO SERVIÇO DE INTELIGÊNCIA ARTIFICIAL (Gemini)
+builder.Services.AddHttpClient<GeminiAiService>();
+builder.Services.AddTransient<GeminiAiService>(sp => {
+    var client = sp.GetRequiredService<HttpClient>();
+    var config = sp.GetRequiredService<IConfiguration>();
+    var logger = sp.GetRequiredService<ILogger<GeminiAiService>>();
+    var apiKey = config["Gemini:ApiKey"] ?? string.Empty;
+    return new GeminiAiService(client, apiKey, logger);
+});
+
 // ==========================================
 // 3. BUILD E CONFIGURAÇÃO HTTP
 // ==========================================
@@ -93,6 +115,8 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAngular");
 
 // ATIVA O SWAGGER (Apenas para facilitar o teste local. Em prod rigoroso, podemos desativar por segurança)
 app.UseSwagger();

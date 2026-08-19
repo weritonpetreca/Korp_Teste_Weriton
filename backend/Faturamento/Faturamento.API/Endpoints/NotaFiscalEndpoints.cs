@@ -1,6 +1,8 @@
 using Faturamento.API.Filters;
 using Faturamento.Application.DTOs;
 using Faturamento.Application.UseCases;
+using Faturamento.Domain.Repositories;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Faturamento.API.Endpoints;
 
@@ -11,7 +13,20 @@ public static class NotaFiscalEndpoints
         var group = routes.MapGroup("/api/notas")
                           .WithTags("Notas Fiscais");
 
-        // Endpoint para Criar Nota Fiscal (Status Inicial: Aberta)
+        // ==========================================
+        // 0. LISTAR TODAS AS NOTAS FISCAIS (GET)
+        // ==========================================
+        group.MapGet("/", async ([FromServices] INotaFiscalRepository repository) =>
+        {
+            var notas = await repository.ObterTodosAsync();
+            return Results.Ok(notas);
+        })
+        .WithName("ListarNotasFiscais")
+        .Produces<IEnumerable<object>>(StatusCodes.Status200OK);
+
+        // ==========================================
+        // 1. CRIAR NOTA FISCAL (POST)
+        // ==========================================
         group.MapPost("/", async (CriarNotaFiscalRequest request, CriarNotaFiscalUseCase useCase) =>
         {
             var numeroNota = await useCase.ExecutarAsync(request);
@@ -24,7 +39,9 @@ public static class NotaFiscalEndpoints
         .Produces(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
-        // Endpoint para Imprimir / Fechar Nota Fiscal (Debita o estoque)
+        // ==========================================
+        // 2. IMPRIMIR / FECHAR NOTA FISCAL (POST)
+        // ==========================================
         group.MapPost("/{numero}/imprimir", async (string numero, ImprimirNotaFiscalUseCase useCase) =>
         {
             await useCase.ExecutarAsync(numero);

@@ -1,0 +1,15 @@
+<header class="navbar">
+  <div class="nav-brand">
+    <h1>Korp ERP</h1>
+    <span class="badge">Microservices Edition</span>
+  </div>
+  <nav class="nav-links">
+    <a routerLink="/produtos" routerLinkActive="active">📦 Estoque (Produtos)</a>
+    <a routerLink="/notas" routerLinkActive="active">📄 Faturamento (Notas Fiscais)</a>
+  </nav>
+</header>
+
+<main class="main-content">
+  <!-- O <router-outlet> injeta dinamicamente o componente da rota ativa -->
+  <router-outlet></router-outlet>
+</main>

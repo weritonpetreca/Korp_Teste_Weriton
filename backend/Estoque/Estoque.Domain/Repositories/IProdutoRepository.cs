@@ -11,4 +11,6 @@ public interface IProdutoRepository
 
     // Método para atualizar o produto (necessário para darmos baixa no estoque)
     Task AtualizarAsync(Produto produto);
+    
+    Task<IEnumerable<Produto>> ObterTodosAsync();
 }

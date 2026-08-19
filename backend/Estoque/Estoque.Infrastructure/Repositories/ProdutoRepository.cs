@@ -86,4 +86,54 @@ public class ProdutoRepository(IAmazonDynamoDB dynamoDb) : IProdutoRepository
 
         await _dynamoDb.PutItemAsync(request);
     }
+
+    public async Task<IEnumerable<Produto>> ObterTodosAsync()
+    {
+        var request = new ScanRequest
+        {
+            TableName = TableName,
+            FilterExpression = "begins_with(PK, :prefix)",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":prefix", new AttributeValue { S = "PROD#" } }
+            }
+        };
+
+        var response = await _dynamoDb.ScanAsync(request);
+        var produtos = new List<Produto>();
+
+        if (response.Items == null || response.Items.Count == 0)
+        {
+            return produtos;
+        }
+
+        foreach (var item in response.Items)
+        {
+            // Verificação defensiva usando TryGetValue para evitar KeyNotFoundException
+            if (!item.TryGetValue("Codigo", out var codigoVal) ||
+                !item.TryGetValue("Descricao", out var descVal) ||
+                !item.TryGetValue("Saldo", out var saldoVal) ||
+                !item.TryGetValue("Version", out var versionVal) ||
+                !item.TryGetValue("DataCriacao", out var dataCriacaoVal) ||
+                !item.TryGetValue("DataAtualizacao", out var dataAtualizacaoVal))
+            {
+                // Pula itens que não possuem a estrutura completa de um produto
+                continue; 
+            }
+
+            // Reconstitui o produto de forma segura
+            var produto = new Produto(
+                codigoVal.S,
+                descVal.S,
+                int.Parse(saldoVal.N),
+                int.Parse(versionVal.N),
+                dataCriacaoVal.S,
+                dataAtualizacaoVal.S
+            );
+
+            produtos.Add(produto);
+        }
+
+        return produtos.OrderBy(p => p.Codigo);
+    }
 }

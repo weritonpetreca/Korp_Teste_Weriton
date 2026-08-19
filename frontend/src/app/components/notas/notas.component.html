@@ -1,0 +1,100 @@
+<div class="container">
+  <h2>Gestão e Emissão de Notas Fiscais</h2>
+
+  <!-- Indicador de Processamento Global (Loading) -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Processando impressão, debitando estoque e atualizando status...</p>
+  </div>
+
+  <!-- Mensagens -->
+  <div *ngIf="errorMessage" class="alert error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert success">{{ successMessage }}</div>
+
+  <!-- Bloco de Criação de Nota -->
+  <div class="card form-card">
+    <h3>Nova Nota Fiscal (Status Inicial: Aberta)</h3>
+    
+    <div class="add-item-row">
+      <select [(ngModel)]="itemAtual.codigoProduto" name="codigoProduto">
+        <option value="" disabled selected>Selecione um produto</option>
+        <option *ngFor="let p of produtosDisponiveis" [value]="p.codigo">
+          {{ p.codigo }} - {{ p.descricao }} (Saldo Disponível: {{ getSaldoDisponivel(p.codigo) }})
+        </option>
+      </select>
+
+      <input type="number" [(ngModel)]="itemAtual.quantidade" name="quantidade" min="1" placeholder="Qtd" />
+      
+      <button type="button" class="btn-secondary" (click)="adicionarItem()">Adicionar Item</button>
+    </div>
+
+    <!-- Tabela de Itens da Nota em Construção -->
+    <table class="sub-table" *ngIf="itensDaNota.length > 0">
+      <thead>
+        <tr>
+          <th>Código do Produto</th>
+          <th>Quantidade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of itensDaNota; let i = index">
+          <td>{{ item.codigoProduto }}</td>
+          <td>{{ item.quantidade }}</td>
+          <td><button class="btn-danger" (click)="removerItem(i)">Remover</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button class="btn-primary" (click)="criarNotaFiscal()" [disabled]="itensDaNota.length === 0">
+      Gerar Nota Fiscal
+    </button>
+  </div>
+
+  <!-- Lista de Notas Emitidas com Trilha de Auditoria -->
+  <div class="card list-card">
+    <h3>Notas Fiscais Emitidas & Auditoria</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Status / Datas</th>
+          <th>Itens da Nota</th>
+          <th>Ações de Impressão</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let n of notasCriadas">
+          <td><strong>#{{ n.numero }}</strong></td>
+          <td>
+            <span [class.status-aberta]="n.status === 'Aberta'" [class.status-fechada]="n.status === 'Fechada'">
+              {{ n.status }}
+            </span>
+            <div class="audit-dates">
+              <small>Criada em: {{ n.dataCriacao || 'N/A' }}</small><br>
+              <small *ngIf="n.dataFechamento">Fechada em: {{ n.dataFechamento }}</small>
+            </div>
+          </td>
+          <td>
+            <ul class="audit-items-list">
+              <li *ngFor="let item of n.itens">
+                Prod: <code>{{ item.codigoProduto }}</code> | Qtd: <strong>{{ item.quantidade }}</strong>
+              </li>
+            </ul>
+          </td>
+          <td>
+            <button 
+              class="btn-print" 
+              (click)="imprimirNota(n)" 
+              [disabled]="n.status !== 'Aberta' || isLoading">
+              🖨️ Imprimir & Fechar
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="notasCriadas.length === 0">
+          <td colspan="4" class="empty">Nenhuma nota fiscal emitida nesta sessão.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

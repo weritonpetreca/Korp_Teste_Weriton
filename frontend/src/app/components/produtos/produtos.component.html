@@ -1,0 +1,67 @@
+<div class="container">
+  <h2>Gerenciamento de Estoque de Produtos</h2>
+
+  <!-- Mensagens de Feedback -->
+  <div *ngIf="errorMessage" class="alert error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert success">{{ successMessage }}</div>
+
+  <!-- Formulário de Cadastro -->
+  <div class="card form-card">
+    <h3>Novo Produto</h3>
+    <form (ngSubmit)="cadastrarProduto()">
+      <div class="form-group">
+        <label>Código:</label>
+        <input type="text" [(ngModel)]="novoProduto.codigo" name="codigo" required />
+      </div>
+
+      <div class="form-group">
+        <label>Descrição:</label>
+        <input type="text" [(ngModel)]="novoProduto.descricao" name="descricao" required />
+      </div>
+
+      <div class="form-group">
+        <label>Saldo Inicial:</label>
+        <input type="number" [(ngModel)]="novoProduto.saldo" name="saldo" required min="0" />
+      </div>
+
+      <button type="submit" class="btn-primary">Cadastrar Produto</button>
+    </form>
+  </div>
+
+  <!-- Tabela de Listagem -->
+  <div class="card list-card">
+    <h3>Produtos Cadastrados</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descrição</th>
+          <th>Saldo Atual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of produtos">
+          <td>{{ p.codigo }}</td>
+          <td>{{ p.descricao }}</td>
+          <td>{{ p.saldo }}</td>
+        </tr>
+        <tr *ngIf="produtos.length === 0">
+          <td colspan="3" class="empty">Nenhum produto cadastrado no momento.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Card de Inteligência Artificial (Gemini Real) -->
+<div class="card ai-card" style="margin-top: 20px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+  <h3>🤖 Copilot de Estoque (Google Gemini IA)</h3>
+  <p>Analise os saldos atuais em tempo real utilizando inteligência artificial generativa.</p>
+  
+  <button type="button" class="btn-secondary" (click)="analisarEstoqueComIA()" [disabled]="isAnalyzing">
+    {{ isAnalyzing ? 'Consultando Gemini IA...' : '✨ Gerar Análise Inteligente' }}
+  </button>
+
+  <div *ngIf="aiInsight" class="ai-response" style="margin-top: 15px; padding: 12px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 4px; color: #0369a1; font-family: monospace;" [innerHTML]="aiInsight">
+  </div>
+</div>
+</div>
