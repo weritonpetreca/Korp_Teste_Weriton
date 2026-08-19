@@ -169,4 +169,7 @@ if (app.Environment.IsDevelopment())
 app.Run();
 
 // Necessário para o WebApplicationFactory enxergar o Program nos Testes de Integração
-public partial class Program { }
+namespace Estoque.API
+{
+    public partial class Program { }
+}

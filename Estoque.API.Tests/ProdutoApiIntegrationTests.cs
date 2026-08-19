@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Testcontainers.DynamoDb;
-using Xunit;
 using Estoque.Application.DTOs;
 
 namespace Estoque.API.Tests;
