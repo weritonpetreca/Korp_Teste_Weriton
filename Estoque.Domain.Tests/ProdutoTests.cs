@@ -1,6 +1,3 @@
-using Xunit;
-using Estoque.Domain;
-
 namespace Estoque.Domain.Tests;
 
 public class ProdutoComportamentoTests

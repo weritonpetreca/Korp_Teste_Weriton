@@ -1,4 +1,3 @@
-using Estoque.Application.DTOs;
 using FluentValidation;
 
 namespace Estoque.Application.Validators;

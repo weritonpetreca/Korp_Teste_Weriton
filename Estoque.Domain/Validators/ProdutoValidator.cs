@@ -1,5 +1,4 @@
 using FluentValidation;
-using Estoque.Domain;
 
 namespace Estoque.Domain.Validators;
 

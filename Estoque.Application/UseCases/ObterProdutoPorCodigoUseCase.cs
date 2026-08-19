@@ -1,5 +1,4 @@
 using Estoque.Application.DTOs;
-using Estoque.Application.Validators;
 using Estoque.Domain.Repositories;
 using FluentValidation;
 

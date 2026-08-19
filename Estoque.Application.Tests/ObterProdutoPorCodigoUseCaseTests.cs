@@ -1,6 +1,5 @@
 using FluentValidation;
 using Moq;
-using Estoque.Application.DTOs;
 using Estoque.Application.UseCases;
 using Estoque.Application.Validators;
 using Estoque.Domain;
