@@ -67,7 +67,15 @@ builder.Services.AddProblemDetails();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "Korp Faturamento API", 
+        Version = "v1",
+        Description = "Microsserviço de gerenciamento de faturamento com concorrência otimista (DynamoDB)."
+    });
+});
 
 // CORS
 builder.Services.AddCors(options =>
@@ -92,7 +100,12 @@ app.UseCors("AllowAngular");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Estoque API v1");
+        // Faz a interface gráfica abrir direto na URL raiz do servidor (localhost:porta/)
+        c.RoutePrefix = string.Empty; 
+    });
 }
 
 app.MapNotaFiscalEndpoints();

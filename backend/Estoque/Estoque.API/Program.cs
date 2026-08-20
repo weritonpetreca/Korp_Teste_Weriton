@@ -119,13 +119,16 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 
 // ATIVA O SWAGGER (Apenas para facilitar o teste local. Em prod rigoroso, podemos desativar por segurança)
-app.UseSwagger();
-app.UseSwaggerUI(c => 
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Estoque API v1");
-    // Faz a interface gráfica abrir direto na URL raiz do servidor (localhost:porta/)
-    c.RoutePrefix = string.Empty; 
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Estoque API v1");
+        // Faz a interface gráfica abrir direto na URL raiz do servidor (localhost:porta/)
+        c.RoutePrefix = string.Empty; 
+    });
+}
 
 // Rota de Teste para garantir que a API subiu
 app.MapGet("/health", () => Results.Ok(new { Status = "Estoque Service is Online" }));
