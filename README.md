@@ -50,7 +50,7 @@ Para rodar o projeto localmente garantindo isolamento e segurança, siga os pass
 ### A. Subindo o Banco de Dados (Docker)
 O sistema utiliza o DynamoDB Local. Para subir o banco rapidamente em background, execute o comando direto no seu terminal:
 ```bash
-docker run -d -p 8000:8000 amazon/dynamodb-local
+docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local
 ```
 *O container rodará na porta `8000`. As APIs estão configuradas para criar as tabelas automaticamente no modo de desenvolvimento.*
 

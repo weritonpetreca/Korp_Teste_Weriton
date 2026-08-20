@@ -144,50 +144,32 @@ if (app.Environment.IsDevelopment())
     try
     {
         app.Logger.LogInformation("Verificando se a tabela {TableName} já existe...", tableName);
-        
-        // Se ela existir, deletamos e aguardamos o término real da exclusão
-        await dynamoDbClient.DeleteTableAsync(tableName);
-        app.Logger.LogInformation("Aguardando exclusão completa da tabela no DynamoDB Local...");
-        
-        // Loop de espera ativa até o DynamoDB confirmar que a tabela sumiu
-        bool tabelaDeletada = false;
-        while (!tabelaDeletada)
-        {
-            try
-            {
-                await dynamoDbClient.DescribeTableAsync(tableName);
-                await Task.Delay(500); // Espera meio segundo e tenta de novo
-            }
-            catch (ResourceNotFoundException)
-            {
-                tabelaDeletada = true; // A exceção confirma que a tabela finalmente sumiu!
-            }
-        }
-        app.Logger.LogInformation("Tabela antiga removida com sucesso.");
-    }
-    catch (ResourceNotFoundException)
-    {
-        // Se a tabela não existia, seguimos normalmente
-    }
 
-    // Criamos a tabela do zero com apenas a PK
-    app.Logger.LogInformation("Criando a tabela {TableName} com a estrutura correta (apenas PK)...", tableName);
-    var request = new CreateTableRequest
-    {
-        TableName = tableName,
-        AttributeDefinitions = new List<AttributeDefinition>
+        var request = new CreateTableRequest
         {
-            new AttributeDefinition { AttributeName = "PK", AttributeType = "S" }
-        },
-        KeySchema = new List<KeySchemaElement>
-        {
-            new KeySchemaElement { AttributeName = "PK", KeyType = "HASH" }
-        },
-        BillingMode = BillingMode.PAY_PER_REQUEST
-    };
+            TableName = tableName,
+            AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition { AttributeName = "PK", AttributeType = "S" }
+            },
+            KeySchema = new List<KeySchemaElement>
+            {
+                new KeySchemaElement { AttributeName = "PK", KeyType = "HASH" }
+            },
+            BillingMode = BillingMode.PAY_PER_REQUEST
+        };
 
-    await dynamoDbClient.CreateTableAsync(request);
-    app.Logger.LogInformation("Tabela {TableName} criada com sucesso!", tableName);
+        await dynamoDbClient.CreateTableAsync(request);
+        app.Logger.LogInformation("Tabela {TableName} criada com sucesso!", tableName);
+    }
+    catch (ResourceInUseException)
+    {
+        app.Logger.LogInformation("A tabela {TableName} já existe no DynamoDB. Mantendo os dados existentes.", tableName);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Erro ao provisionar a tabela {TableName}.", tableName);
+    }
 }
 
 app.Run();

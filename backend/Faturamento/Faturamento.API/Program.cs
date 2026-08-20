@@ -108,18 +108,7 @@ if (app.Environment.IsDevelopment())
 
     try
     {
-        app.Logger.LogInformation("Verificando tabela {TableName}...", tableName);
-        
-        try {
-            await dynamoDb.DeleteTableAsync(tableName);
-            // Loop de espera ativa
-            bool deleted = false;
-            while (!deleted) {
-                try { await dynamoDb.DescribeTableAsync(tableName); await Task.Delay(500); }
-                catch (ResourceNotFoundException) { deleted = true; }
-            }
-            app.Logger.LogInformation("Tabela antiga removida.");
-        } catch (ResourceNotFoundException) { /* Ok */ }
+        app.Logger.LogInformation("Verificando se a tabela {TableName} já existe...", tableName);
 
         await dynamoDb.CreateTableAsync(new CreateTableRequest
         {
@@ -128,11 +117,16 @@ if (app.Environment.IsDevelopment())
             AttributeDefinitions = [ new AttributeDefinition("PK", ScalarAttributeType.S) ],
             KeySchema = [ new KeySchemaElement("PK", KeyType.HASH) ]
         });
+        
         app.Logger.LogInformation("Tabela {TableName} criada com sucesso!", tableName);
+    }
+    catch (ResourceInUseException)
+    {
+        app.Logger.LogInformation("A tabela {TableName} já existe no DynamoDB. Mantendo os dados existentes.", tableName);
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "Erro ao provisionar tabela.");
+        app.Logger.LogError(ex, "Erro ao provisionar tabela {TableName}.", tableName);
     }
 }
 
